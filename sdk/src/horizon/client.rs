@@ -2,6 +2,12 @@ use reqwest::Client;
 use serde::Deserialize;
 use thiserror::Error;
 
+#[derive(Debug, Default)]
+pub struct HorizonClient {
+    client: Client,
+    base_url: String,
+}
+
 #[derive(Debug, Error)]
 pub enum HorizonError {
     #[error("HTTP error: {0}")]
@@ -69,11 +75,6 @@ pub struct TransactionDetail {
     pub envelope_xdr: String,
 }
 
-pub struct HorizonClient {
-    client: Client,
-    base_url: String,
-}
-
 impl HorizonClient {
     pub fn new(base_url: impl Into<String>) -> Self {
         Self {
@@ -82,6 +83,7 @@ impl HorizonClient {
         }
     }
 
+    #[tracing::instrument(skip(self), fields(address))]
     pub async fn get_account(&self, address: &str) -> Result<AccountResponse, HorizonError> {
         let url = format!("{}/accounts/{}", self.base_url, address);
         let resp = self.client.get(&url).send().await?;
@@ -91,6 +93,7 @@ impl HorizonClient {
         Ok(resp.json().await?)
     }
 
+    #[tracing::instrument(skip(self), fields(address, cursor = ?cursor))]
     pub async fn get_transactions(
         &self,
         address: &str,
@@ -107,6 +110,7 @@ impl HorizonClient {
         Ok(resp.json().await?)
     }
 
+    #[tracing::instrument(skip(self), fields(address, cursor = ?cursor))]
     pub async fn get_payments(
         &self,
         address: &str,
@@ -123,6 +127,7 @@ impl HorizonClient {
         Ok(resp.json().await?)
     }
 
+    #[tracing::instrument(skip(self), fields(hash))]
     pub async fn get_transaction(&self, hash: &str) -> Result<TransactionDetail, HorizonError> {
         let url = format!("{}/transactions/{}", self.base_url, hash);
         let resp = self.client.get(&url).send().await?;

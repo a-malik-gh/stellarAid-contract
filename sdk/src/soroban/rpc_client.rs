@@ -96,6 +96,7 @@ impl SorobanRpcClient {
         resp.result.ok_or_else(|| RpcError::Rpc("Empty result".into()))
     }
 
+    #[tracing::instrument(skip(self), fields(xdr = %xdr))]
     pub async fn simulate_transaction(&self, xdr: &str) -> Result<SimulationResult, RpcError> {
         self.call(
             "simulateTransaction",
@@ -104,6 +105,7 @@ impl SorobanRpcClient {
         .await
     }
 
+    #[tracing::instrument(skip(self), fields(xdr = %xdr))]
     pub async fn send_transaction(&self, xdr: &str) -> Result<SendResult, RpcError> {
         self.call(
             "sendTransaction",
@@ -112,6 +114,7 @@ impl SorobanRpcClient {
         .await
     }
 
+    #[tracing::instrument(skip(self), fields(hash))]
     pub async fn get_transaction_status(&self, hash: &str) -> Result<TransactionStatus, RpcError> {
         let result: TxStatusResult = self
             .call("getTransaction", serde_json::json!({ "hash": hash }))

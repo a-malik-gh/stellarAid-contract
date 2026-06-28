@@ -44,11 +44,10 @@ pub fn print_token_setup() -> Result<(), TokenSetupError> {
     let issuing = generate_keypair()?;
     let distribution = generate_keypair()?;
 
+    tracing::info!(asset_code = ASSET_CODE, issuing_public = %issuing.public_key, distribution_public = %distribution.public_key, "token setup generated");
     println!("=== AID Token Setup ===");
     println!("Issuing Public:      {}", issuing.public_key);
-    println!("Issuing Secret:      {}", issuing.secret_key);
     println!("Distribution Public: {}", distribution.public_key);
-    println!("Distribution Secret: {}", distribution.secret_key);
     println!();
     println!("Next steps:");
     println!("1. Fund both accounts: https://friendbot.stellar.org?addr=<PUBLIC_KEY>");

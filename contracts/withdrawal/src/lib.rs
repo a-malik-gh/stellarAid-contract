@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, BytesN, Env, String, Symbol, Vec};
 use shared::types::Withdrawal;
 
 #[contracttype]
@@ -9,6 +9,7 @@ pub enum DataKey {
     Withdrawal(u64) = 0,
     WithdrawalsByCampaign(u64) = 1,
     Admin = 2,
+    Initialized = 3,
 }
 
 #[contracttype]
@@ -39,7 +40,11 @@ pub struct WithdrawalContract;
 impl WithdrawalContract {
     pub fn initialize(env: Env, admin: Address) {
         admin.require_auth();
+        if env.storage().instance().has(&DataKey::Initialized) {
+            panic!("already initialized");
+        }
         env.storage().instance().set(&DataKey::Admin, &admin);
+        env.storage().instance().set(&DataKey::Initialized, &true);
     }
 
     pub fn request_withdrawal(env: Env, campaign_id: u64, owner: Address, amount: i128, recipient: Address) -> u64 {
@@ -86,6 +91,12 @@ impl WithdrawalContract {
 
     pub fn get_withdrawals_by_campaign(env: Env, campaign_id: u64) -> Vec<Withdrawal> {
         env.storage().persistent().get(&DataKey::WithdrawalsByCampaign(campaign_id)).unwrap_or(Vec::new(&env))
+    }
+
+    pub fn upgrade(env: Env, admin: Address, new_wasm_hash: BytesN<32>) {
+        admin.require_auth();
+        Self::ensure_admin(&env, &admin);
+        env.deployer().update_current_contract_wasm(&new_wasm_hash);
     }
 
     fn ensure_admin(env: &Env, admin: &Address) {

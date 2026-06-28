@@ -1,3 +1,6 @@
+use sdk::logging;
+
 fn main() {
-    println!("StellarAid worker starting...");
+    let _ = logging::init_logging();
+    tracing::info!(event = "worker_startup", "StellarAid worker starting");
 }
